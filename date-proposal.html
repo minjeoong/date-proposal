@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>나랑 데이트할래?</title>
+<style>
+  :root{
+    --bg-1: #ffe3ea;
+    --bg-2: #fff1e9;
+    --bg-3: #ffd9e4;
+    --rose-400: #ff8fa3;
+    --rose-500: #ff6b88;
+    --rose-600: #e8496b;
+    --plum-900: #4a2a38;
+    --plum-500: #8b6070;
+    --card-bg: #ffffff;
+    --gold: #ffcf6b;
+    --lilac: #c9a7ff;
+    --shadow-rose: rgba(232, 73, 107, 0.18);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 20% 20%, var(--bg-2), var(--bg-1) 55%, var(--bg-3) 100%);
+    color: var(--plum-900);
+    position: relative;
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ---------- 배경 하트 ---------- */
+  #heart-field{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-heart{
+    position:absolute;
+    bottom: -10vh;
+    font-size: 22px;
+    opacity: 0.35;
+    color: var(--rose-400);
+    animation-name: floatUp;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+    will-change: transform, opacity;
+    user-select:none;
+  }
+
+  @keyframes floatUp{
+    0%{
+      transform: translateY(0) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10%{ opacity: 0.45; }
+    50%{
+      transform: translateY(-55vh) translateX(var(--drift, 20px)) rotate(15deg);
+    }
+    90%{ opacity: 0.35; }
+    100%{
+      transform: translateY(-115vh) translateX(calc(var(--drift, 20px) * -1)) rotate(-10deg);
+      opacity: 0;
+    }
+  }
+
+  /* ---------- 무대 ---------- */
+  .stage{
+    position: relative;
+    z-index: 2;
+    width: min(92vw, 440px);
+    padding: 8px;
+  }
+
+  .screen{
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .screen.active{ display:flex; }
+
+  .card{
+    background: var(--card-bg);
+    border-radius: 32px;
+    padding: clamp(32px, 8vw, 48px) clamp(24px, 7vw, 40px);
+    box-shadow:
+      0 24px 60px -12px var(--shadow-rose),
+      0 4px 12px -2px rgba(74, 42, 56, 0.08);
+    width: 100%;
+    position: relative;
+    transition: padding 0.3s ease;
+  }
+
+  .eyebrow-heart{
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: 14px;
+    display:inline-block;
+    animation: gentlePulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes gentlePulse{
+    0%, 100%{ transform: scale(1); }
+    50%{ transform: scale(1.12); }
+  }
+
+  h1{
+    font-size: clamp(26px, 6.4vw, 34px);
+    line-height: 1.35;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+    color: var(--plum-900);
+  }
+
+  .subtext{
+    font-size: 15px;
+    color: var(--plum-500);
+    margin: 0 0 32px;
+    font-weight: 500;
+  }
+
+  .button-row{
+    display:flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    position: relative;
+    transition: min-height 0.3s ease;
+  }
+
+  button{
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  #yes-btn{
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 17px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+    box-shadow: 0 12px 24px -8px var(--shadow-rose);
+    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s ease;
+  }
+  #yes-btn:hover{ transform: translateY(-2px) scale(1.02); }
+  #yes-btn:active{ transform: scale(0.97); }
+  #yes-btn:focus-visible{ outline: 3px solid var(--rose-600); outline-offset: 3px; }
+
+  #no-btn{
+    padding: 14px 22px;
+    font-size: 15px;
+    color: var(--plum-500);
+    background: #fff5f7;
+    border: 1.5px solid #ffd7e0;
+    transition: transform 0.22s ease, background 0.2s ease, left 0.28s cubic-bezier(.22,1,.36,1), top 0.28s cubic-bezier(.22,1,.36,1);
+    white-space: nowrap;
+  }
+  #no-btn:focus-visible{ outline: 3px solid var(--plum-500); outline-offset: 3px; }
+  #no-btn.dodging{
+    z-index: 50;
+  }
+  #no-btn.wobble{
+    animation: wobble 0.4s ease;
+  }
+  @keyframes wobble{
+    0%{ transform: rotate(0deg) scale(1); }
+    25%{ transform: rotate(-8deg) scale(1.05); }
+    50%{ transform: rotate(6deg) scale(0.97); }
+    75%{ transform: rotate(-4deg) scale(1.02); }
+    100%{ transform: rotate(0deg) scale(1); }
+  }
+
+  .hint{
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: #c98da0;
+    font-weight: 500;
+  }
+
+  /* ---------- 축하 화면 ---------- */
+  #celebrate-screen .card{
+    padding-top: clamp(40px, 9vw, 52px);
+  }
+
+  .burst-emoji{
+    font-size: 46px;
+    display:inline-block;
+    margin-bottom: 6px;
+    animation: popIn 0.6s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @keyframes popIn{
+    0%{ transform: scale(0) rotate(-20deg); opacity:0; }
+    70%{ transform: scale(1.15) rotate(6deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); }
+  }
+
+  #celebrate-screen h1{
+    animation: riseIn 0.55s ease both;
+    animation-delay: 0.1s;
+    opacity: 0;
+  }
+  #celebrate-screen .subtext{
+    animation: riseIn 0.55s ease both;
+    animation-delay: 0.25s;
+    opacity: 0;
+    color: var(--rose-600);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  @keyframes riseIn{
+    from{ transform: translateY(14px); opacity:0; }
+    to{ transform: translateY(0); opacity:1; }
+  }
+
+  /* 떨어지는 하트 + 폭죽 레이어 */
+  #fx-layer{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    overflow: hidden;
+  }
+
+  .fall-heart{
+    position: absolute;
+    top: -10vh;
+    font-size: 20px;
+    animation-name: fallDown;
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+    will-change: transform, opacity;
+  }
+
+  @keyframes fallDown{
+    0%{
+      transform: translateY(0) translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    100%{
+      transform: translateY(115vh) translateX(var(--sway, 0px)) rotate(360deg);
+      opacity: 0.85;
+    }
+  }
+
+  .spark{
+    position:absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    opacity: 1;
+    animation: sparkOut 0.9s ease-out forwards;
+  }
+
+  @keyframes sparkOut{
+    0%{
+      transform: translate(0,0) scale(1);
+      opacity: 1;
+    }
+    100%{
+      transform: translate(var(--sx), var(--sy)) scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 380px){
+    #no-btn{ font-size: 14px; padding: 12px 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg-heart, .eyebrow-heart, #yes-btn, #no-btn.wobble, .fall-heart, .spark,
+    #celebrate-screen h1, #celebrate-screen .subtext{
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div id="heart-field" aria-hidden="true"></div>
+
+  <div class="stage">
+
+    <!-- 화면 1: 질문 -->
+    <section id="ask-screen" class="screen active">
+      <div class="card">
+        <span class="eyebrow-heart">💌</span>
+        <h1 id="question-text">나랑 데이트할래?</h1>
+        <p class="subtext">신중하게 골라줘, 근데 사실 답은 하나뿐이야</p>
+
+        <div class="button-row" id="button-row">
+          <button id="yes-btn" type="button">❤️ 네</button>
+          <button id="no-btn" type="button">아니요</button>
+        </div>
+
+        <p class="hint" id="hint-text">"아니요"는 신중하게 눌러줘 👀</p>
+      </div>
+    </section>
+
+    <!-- 화면 2: 축하 -->
+    <section id="celebrate-screen" class="screen">
+      <div class="card">
+        <span class="burst-emoji">🎉</span>
+        <h1>🎉 데이트 신청 성공!</h1>
+        <p class="subtext">그럼 우리 데이트하자 ❤️</p>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="fx-layer" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- 배경 은은한 하트 ---------------- */
+  function initBackgroundHearts(){
+    if(reduceMotion) return;
+    var field = document.getElementById('heart-field');
+    var symbols = ['💗','💕','💖','❤️','💘'];
+    var count = window.innerWidth < 480 ? 12 : 20;
+
+    for(var i=0; i<count; i++){
+      var h = document.createElement('span');
+      h.className = 'bg-heart';
+      h.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+      var left = Math.random()*100;
+      var size = 14 + Math.random()*18;
+      var duration = 9 + Math.random()*10;
+      var delay = Math.random()*duration;
+      var drift = (Math.random()*60 - 30) + 'px';
+
+      h.style.left = left + 'vw';
+      h.style.fontSize = size + 'px';
+      h.style.animationDuration = duration + 's';
+      h.style.animationDelay = '-' + delay + 's';
+      h.style.setProperty('--drift', drift);
+
+      field.appendChild(h);
+    }
+  }
+  initBackgroundHearts();
+
+  /* ---------------- "아니요" 버튼 도망 로직 ---------------- */
+  var noBtn = document.getElementById('no-btn');
+  var yesBtn = document.getElementById('yes-btn');
+  var buttonRow = document.getElementById('button-row');
+  var hintText = document.getElementById('hint-text');
+
+  var askCard = document.querySelector('#ask-screen .card');
+  var attempts = 0;
+  var hasEscapedOnce = false;
+  var messages = ['진짜?', '다시 생각해봐!', '그건 선택지가 아닌데...', '네 누르면 되잖아 😏'];
+
+  function updateButtonText(){
+    if(attempts >= 3){
+      var idx = (attempts - 3) % messages.length;
+      noBtn.textContent = messages[idx];
+    }
+  }
+
+  function updateHint(){
+    if(attempts >= 1 && attempts < 3){
+      hintText.textContent = '어? 버튼이 도망가네 🙈';
+    } else if(attempts >= 3 && attempts < 6){
+      hintText.textContent = '포기가 빠른 게 좋을 수도 있어';
+    } else if(attempts >= 6){
+      hintText.textContent = '그냥 "네"를 눌러줘, 부탁이야 🥺';
+    }
+  }
+
+  function growYesButton(){
+    var scale = Math.min(1 + attempts * 0.03, 1.18);
+    yesBtn.style.transform = 'scale(' + scale + ')';
+  }
+
+  function escapeButton(){
+    var margin = 16;
+
+    if(!hasEscapedOnce){
+      // 첫 도망: 인라인 배치에서 고정 배치로 전환하면서 현재 위치를 시작점으로 지정
+      var rect = noBtn.getBoundingClientRect();
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = rect.left + 'px';
+      noBtn.style.top = rect.top + 'px';
+      noBtn.style.margin = '0';
+      // 레이아웃에서 빠진 자리를 살짝만 보정해 카드가 자연스럽게 줄어들도록 함
+      var spacer = document.createElement('div');
+      spacer.style.height = '6px';
+      spacer.style.width = '1px';
+      buttonRow.appendChild(spacer);
+      noBtn.classList.add('dodging');
+      hasEscapedOnce = true;
+      // 강제 리플로우 후 위치 애니메이션 적용
+      void noBtn.offsetWidth;
+    }
+
+    attempts++;
+    // 문구를 먼저 바꾸고, 바뀐 크기 기준으로 안전 영역을 계산한다
+    updateButtonText();
+    updateHint();
+    growYesButton();
+
+    var w = noBtn.offsetWidth || 90;
+    var h = noBtn.offsetHeight || 44;
+
+    var maxX = window.innerWidth - w - margin;
+    var maxY = window.innerHeight - h - margin;
+    if(maxX < margin) maxX = margin;
+    if(maxY < margin) maxY = margin;
+
+    // 카드(질문 영역)와 겹치지 않는 위치를 우선적으로 찾는다
+    var cardRect = askCard ? askCard.getBoundingClientRect() : null;
+    var buffer = 14;
+    var x, y, tries = 0, found = false;
+
+    while(tries < 24 && !found){
+      x = margin + Math.random() * (maxX - margin);
+      y = margin + Math.random() * (maxY - margin);
+
+      if(!cardRect){ found = true; break; }
+
+      var overlaps = !(
+        x + w < cardRect.left - buffer ||
+        x > cardRect.right + buffer ||
+        y + h < cardRect.top - buffer ||
+        y > cardRect.bottom + buffer
+      );
+
+      if(!overlaps) found = true;
+      tries++;
+    }
+
+    noBtn.style.left = x + 'px';
+    noBtn.style.top = y + 'px';
+
+    if(!reduceMotion){
+      noBtn.classList.remove('wobble');
+      void noBtn.offsetWidth;
+      noBtn.classList.add('wobble');
+    }
+  }
+
+  // 데스크톱: 마우스 진입 시 도망
+  noBtn.addEventListener('mouseenter', function(e){
+    escapeButton();
+  });
+
+  // 모바일: 터치 시작 시 도망 (클릭 전에 선점)
+  noBtn.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    escapeButton();
+  }, { passive: false });
+
+  // 키보드 접근성: 포커스가 가도 도망 (텔레포트지만 화면 안에 유지되어 계속 접근 가능)
+  noBtn.addEventListener('focus', function(){
+    escapeButton();
+  });
+
+  // 혹시라도 클릭에 성공하면: 그냥 다시 한번 도망시키고 메시지 갱신
+  noBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    escapeButton();
+  });
+
+  // 화면 회전/리사이즈 시 화면 밖으로 나가지 않도록 위치 보정
+  window.addEventListener('resize', function(){
+    if(!hasEscapedOnce) return;
+    var rect = noBtn.getBoundingClientRect();
+    var maxX = window.innerWidth - rect.width - 16;
+    var maxY = window.innerHeight - rect.height - 16;
+    var x = Math.min(rect.left, Math.max(16, maxX));
+    var y = Math.min(rect.top, Math.max(16, maxY));
+    noBtn.style.left = x + 'px';
+    noBtn.style.top = y + 'px';
+  });
+
+  /* ---------------- "네" 버튼: 축하 화면 전환 ---------------- */
+  var askScreen = document.getElementById('ask-screen');
+  var celebrateScreen = document.getElementById('celebrate-screen');
+
+  yesBtn.addEventListener('click', function(){
+    askScreen.classList.remove('active');
+    celebrateScreen.classList.add('active');
+    runCelebration();
+  });
+
+  /* ---------------- 축하 애니메이션: 하트 낙하 + 스파크 ---------------- */
+  function runCelebration(){
+    var fx = document.getElementById('fx-layer');
+    var heartSymbols = ['❤️','💖','💕','💗','💘','✨'];
+    var total = reduceMotion ? 8 : 34;
+
+    for(var i=0; i<total; i++){
+      (function(i){
+        setTimeout(function(){
+          var h = document.createElement('span');
+          h.className = 'fall-heart';
+          h.textContent = heartSymbols[Math.floor(Math.random()*heartSymbols.length)];
+          var left = Math.random()*100;
+          var size = 16 + Math.random()*20;
+          var duration = 2.6 + Math.random()*2.2;
+          var sway = (Math.random()*80 - 40) + 'px';
+
+          h.style.left = left + 'vw';
+          h.style.fontSize = size + 'px';
+          h.style.animationDuration = duration + 's';
+          h.style.setProperty('--sway', sway);
+
+          fx.appendChild(h);
+          setTimeout(function(){ h.remove(); }, duration*1000 + 200);
+        }, i * (reduceMotion ? 80 : 90));
+      })(i);
+    }
+
+    // 작은 폭죽 스파크 (2회 터짐)
+    var colors = ['#ff6b88', '#ffcf6b', '#c9a7ff', '#ff8fa3', '#8fd3ff'];
+    function burst(cx, cy, count){
+      for(var i=0; i<count; i++){
+        var s = document.createElement('span');
+        s.className = 'spark';
+        var angle = (Math.PI*2) * (i / count) + Math.random()*0.3;
+        var dist = 60 + Math.random()*70;
+        s.style.left = cx + 'px';
+        s.style.top = cy + 'px';
+        s.style.background = colors[Math.floor(Math.random()*colors.length)];
+        s.style.setProperty('--sx', Math.cos(angle)*dist + 'px');
+        s.style.setProperty('--sy', Math.sin(angle)*dist + 'px');
+        fx.appendChild(s);
+        setTimeout(function(el){ return function(){ el.remove(); }; }(s), 950);
+      }
+    }
+
+    if(!reduceMotion){
+      burst(window.innerWidth*0.28, window.innerHeight*0.32, 14);
+      setTimeout(function(){
+        burst(window.innerWidth*0.72, window.innerHeight*0.28, 14);
+      }, 350);
+      setTimeout(function(){
+        burst(window.innerWidth*0.5, window.innerHeight*0.4, 16);
+      }, 700);
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>
